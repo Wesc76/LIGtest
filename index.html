@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta
+  name="viewport"
+  content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+/>
+<title>Seamless Multi-Angle Player</title>
+
+<style>
+  body {
+    margin: 0;
+    background: black;
+    color: white;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
+
+  .video-container {
+    position: relative;
+    width: 100vw;
+    height: 56.25vw; /* 16:9 */
+    max-height: 100vh;
+    background: black;
+  }
+
+  .cam {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+
+    opacity: 0;
+    transition: opacity 120ms linear;
+    pointer-events: none;
+  }
+
+  .cam.active {
+    opacity: 1;
+  }
+
+  .controls {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    display: flex;
+    gap: 8px;
+    padding: 10px;
+    justify-content: center;
+    background: rgba(0,0,0,0.65);
+  }
+
+  button {
+    padding: 10px 14px;
+    border-radius: 6px;
+    border: 1px solid #555;
+    background: #222;
+    color: white;
+    font-size: 14px;
+    cursor: pointer;
+  }
+
+  button.active {
+    background: white;
+    color: black;
+  }
+
+  .hint {
+    position: fixed;
+    top: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="video-container">
+  <video class="cam active" src="cam0.mp4" playsinline></video>
+  <video class="cam" src="cam1.mp4" playsinline></video>
+  <video class="cam" src="cam2.mp4" playsinline></video>
+  <video class="cam" src="cam3.mp4" playsinline></video>
+  <video class="cam" src="cam4.mp4" playsinline></video>
+  <video class="cam" src="cam5.mp4" playsinline></video>
+
+  <!-- Master audio -->
+  <audio id="audio" src="master-audio.mp3"></audio>
+</div>
+
+<div class="hint">Tap once to start · Switch cameras anytime</div>
+
+<div class="controls">
+  <button class="active" onclick="switchCam(0)">Cam 1</button>
+  <button onclick="switchCam(1)">Cam 2</button>
+  <button onclick="switchCam(2)">Cam 3</button>
+  <button onclick="switchCam(3)">Cam 4</button>
+  <button onclick="switchCam(4)">Cam 5</button>
+  <button onclick="switchCam(5)">Cam 6</button>
+</div>
+
+<script>
+  const cams = [...document.querySelectorAll(".cam")];
+  const buttons = [...document.querySelectorAll(".controls button")];
+  const audio = document.getElementById("audio");
+
+  let active = 0;
+  let started = false;
+
+  cams.forEach(cam => {
+    cam.muted = true;
+    cam.preload = "auto";
+  });
+
+  function startPlayback() {
+    if (started) return;
+    started = true;
+
+    cams.forEach(cam => cam.play());
+    audio.play();
+
+    document.querySelector(".hint").style.display = "none";
+  }
+
+  function switchCam(index) {
+    if (index === active) return;
+
+    cams[active].classList.remove("active");
+    cams[index].classList.add("active");
+
+    buttons[active].classList.remove("active");
+    buttons[index].classList.add("active");
+
+    active = index;
+  }
+
+  // Mobile autoplay unlock
+  document.body.addEventListener("click", startPlayback, { once: true });
+
+  // Optional drift correction (keeps sync tight)
+  setInterval(() => {
+    cams.forEach(cam => {
+      const drift = cam.currentTime - audio.currentTime;
+      if (Math.abs(drift) > 0.04) {
+        cam.currentTime = audio.currentTime;
+      }
+    });
+  }, 10000);
+</script>
+
+</body>
+</html>
